@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -6,10 +7,18 @@ namespace Volorf.ScreenshotMaker
 {
     public class ScreenshotMaker: MonoBehaviour
     {
+        [Header("Camera Settings")]
         [SerializeField] private Camera coverShotCamera;
+        [SerializeField] private int cameraDepth = -1;
+        
         [SerializeField] private string defaultCoverName = "cover";
         [SerializeField] private int coverWidth = 300;
         [SerializeField] private int coverHeight = 200;
+
+        private void Start()
+        {
+            coverShotCamera.depth = cameraDepth;
+        }
 
         public void MakeCover(string filePath)
         {
