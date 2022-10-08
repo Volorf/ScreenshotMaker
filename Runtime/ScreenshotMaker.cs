@@ -7,10 +7,12 @@ namespace Volorf.ScreenshotMaker
 {
     public class ScreenshotMaker: MonoBehaviour
     {
-        [Header("Camera Settings")]
+        [Header("Camera")]
         [SerializeField] private Camera coverShotCamera;
         [SerializeField] private int cameraDepth = -1000;
         
+        [Space(16)]
+        [Header("Screenshot")]
         [SerializeField] private string defaultCoverName = "cover";
         [SerializeField] private int coverWidth = 300;
         [SerializeField] private int coverHeight = 200;
