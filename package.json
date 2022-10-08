@@ -1,6 +1,6 @@
 {
   "name": "com.volorf.screenshot-maker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "displayName": "Screenshot Maker",
   "description": "Makes and saves screenshots.",
   "unity": "2019.4",

@@ -23,6 +23,11 @@ namespace Volorf.ScreenshotMaker
             coverShotCamera.depth = cameraDepth;
         }
 
+        public string GetImagePreviewName()
+        {
+            return defaultCoverName;
+        }
+
         public void MakeCover(string filePath)
         {
             StartCoroutine(CameraCapture(filePath));
