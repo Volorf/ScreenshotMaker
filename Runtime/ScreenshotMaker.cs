@@ -9,7 +9,7 @@ namespace Volorf.ScreenshotMaker
     {
         [Header("Camera Settings")]
         [SerializeField] private Camera coverShotCamera;
-        [SerializeField] private int cameraDepth = -1;
+        [SerializeField] private int cameraDepth = -1000;
         
         [SerializeField] private string defaultCoverName = "cover";
         [SerializeField] private int coverWidth = 300;
