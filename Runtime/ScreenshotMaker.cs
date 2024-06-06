@@ -1,22 +1,27 @@
-using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Volorf.ScreenshotMaker
 {
     public class ScreenshotMaker: MonoBehaviour
     {
         [Header("Camera")]
-        [SerializeField] private Camera coverShotCamera;
-        [SerializeField] private int cameraDepth = -1000;
+        [SerializeField] Camera coverShotCamera;
+        [SerializeField] int cameraDepth = -1000;
         
-        [Space(16)]
+        [Space(10)]
         [Header("Screenshot")]
-        [SerializeField] private string defaultCoverName = "cover";
-        [SerializeField] private int coverAntiAliasing = 2;
-        [SerializeField] private int coverWidth = 300;
-        [SerializeField] private int coverHeight = 200;
+        [SerializeField] string defaultCoverName = "cover";
+        [SerializeField] int coverAntiAliasing = 2;
+        [SerializeField] int coverWidth = 300;
+        [SerializeField] int coverHeight = 200;
+        
+        [Space(10)]
+        [Header("Events")]
+        [SerializeField] UnityEvent<Texture2D> _onScreenshotTaken;
+        [SerializeField] UnityEvent<Sprite> _onSpriteCreated;
 
         private void Start()
         {
@@ -27,6 +32,7 @@ namespace Volorf.ScreenshotMaker
         {
             return defaultCoverName;
         }
+        
 
         public void MakeCover(string filePath)
         {
@@ -46,10 +52,15 @@ namespace Volorf.ScreenshotMaker
             Texture2D tempTexture = new Texture2D(coverWidth, coverHeight);
             tempTexture.ReadPixels(new Rect(0, 0, coverWidth, coverHeight), 0, 0);
             tempTexture.Apply();
+            Sprite sprite = Sprite.Create(tempTexture, new Rect(0f, 0f, coverWidth, coverHeight), Vector2.zero);
             RenderTexture.active = null;
             byte[] imageDataFromCamera = tempTexture.EncodeToPNG();
+        
+            _onScreenshotTaken?.Invoke(tempTexture);
+            _onSpriteCreated.Invoke(sprite);
+            
             Destroy(tempTexture);
-
+            
             return imageDataFromCamera;
         }
 
