@@ -1,5 +1,6 @@
-using System.Collections;
+using System;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -34,9 +35,16 @@ namespace Volorf.ScreenshotMaker
         }
         
 
-        public void MakeCover(string filePath)
+        public async void MakeCover(string filePath)
         {
-            StartCoroutine(CameraCapture(filePath));
+            try
+            {
+                await CamCaptureAsync(filePath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
         public byte[] GetImageDataFromCamera()
@@ -63,16 +71,11 @@ namespace Volorf.ScreenshotMaker
             
             return imageDataFromCamera;
         }
-
-        IEnumerator CameraCapture(string filePath)
-        {
-            yield return new WaitForEndOfFrame();
-            CamCapture(filePath);
-        }
     
-        private void CamCapture(string filePath)
+        private async Task CamCaptureAsync(string filePath)
         {
-            File.WriteAllBytes(filePath + "/" + defaultCoverName + ".png", GetImageDataFromCamera());
+            await File.WriteAllBytesAsync(filePath + "/" + defaultCoverName + ".png", GetImageDataFromCamera());
+            Debug.Log(filePath);
         }
     }
 }
