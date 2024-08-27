@@ -33,7 +33,15 @@ namespace Volorf.ScreenshotMaker
         {
             return defaultCoverName;
         }
-        
+
+        public void MakeScreenshot()
+        {
+            string path = Path.Combine(Application.persistentDataPath, "Screenshots");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            MakeCover(path);
+            Debug.Log("Screenshot has been save there: " + path);
+        }
 
         public async void MakeCover(string filePath)
         {
