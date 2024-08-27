@@ -15,6 +15,7 @@ namespace Volorf.ScreenshotMaker
         [Space(10)]
         [Header("Screenshot")]
         [SerializeField] string defaultCoverName = "cover";
+        [SerializeField] bool useNameCounter;
         [SerializeField] int coverAntiAliasing = 2;
         [SerializeField] int coverWidth = 300;
         [SerializeField] int coverHeight = 200;
@@ -24,9 +25,14 @@ namespace Volorf.ScreenshotMaker
         [SerializeField] UnityEvent<Texture2D> _onScreenshotTaken;
         [SerializeField] UnityEvent<Sprite> _onSpriteCreated;
 
+        const string COUNTER_NAME = "Counter Name";
+        int _currentCounter;
+
         private void Start()
         {
             coverShotCamera.depth = cameraDepth;
+            if (useNameCounter)
+                _currentCounter = PlayerPrefs.GetInt(COUNTER_NAME);
         }
 
         public string GetImagePreviewName()
@@ -40,7 +46,7 @@ namespace Volorf.ScreenshotMaker
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             MakeCover(path);
-            Debug.Log("Screenshot has been save there: " + path);
+            // Debug.Log("Screenshot has been save there: " + path);
         }
 
         public async void MakeCover(string filePath)
@@ -82,8 +88,11 @@ namespace Volorf.ScreenshotMaker
     
         private async Task CamCaptureAsync(string filePath)
         {
+            if (useNameCounter)
+                defaultCoverName += _currentCounter;
+            
             await File.WriteAllBytesAsync(filePath + "/" + defaultCoverName + ".png", GetImageDataFromCamera());
-            Debug.Log(filePath);
+            // Debug.Log(filePath);
         }
     }
 }
