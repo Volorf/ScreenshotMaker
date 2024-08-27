@@ -12,18 +12,19 @@ namespace Volorf.ScreenshotMaker
         [SerializeField] Camera coverShotCamera;
         [SerializeField] int cameraDepth = -1000;
         
-        [Space(10)]
-        [Header("Screenshot")]
+        [Space(10)] [Header("Screenshot")]
         [SerializeField] string defaultCoverName = "cover";
         [SerializeField] bool useNameCounter;
         [SerializeField] int coverAntiAliasing = 2;
         [SerializeField] int coverWidth = 300;
         [SerializeField] int coverHeight = 200;
         
-        [Space(10)]
-        [Header("Events")]
+        [Space(10)] [Header("Events")]
         [SerializeField] UnityEvent<Texture2D> _onScreenshotTaken;
         [SerializeField] UnityEvent<Sprite> _onSpriteCreated;
+
+        [Space(10)] [Header("Debugging")] 
+        [SerializeField] bool _printPath;
 
         const string COUNTER_NAME = "Counter Name";
         int _currentCounter;
@@ -39,14 +40,18 @@ namespace Volorf.ScreenshotMaker
         {
             return defaultCoverName;
         }
-
+    
+        [ContextMenu("Make Screenshot")]
         public void MakeScreenshot()
         {
             string path = Path.Combine(Application.persistentDataPath, "Screenshots");
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             MakeCover(path);
-            // Debug.Log("Screenshot has been save there: " + path);
+            
+            if (_printPath)
+                Debug.Log("Screenshot has been save there: " + path);
+            
         }
 
         public async void MakeCover(string filePath)
@@ -89,7 +94,10 @@ namespace Volorf.ScreenshotMaker
         private async Task CamCaptureAsync(string filePath)
         {
             if (useNameCounter)
+            {
+                _currentCounter++;
                 defaultCoverName += _currentCounter;
+            }
             
             await File.WriteAllBytesAsync(filePath + "/" + defaultCoverName + ".png", GetImageDataFromCamera());
             // Debug.Log(filePath);
