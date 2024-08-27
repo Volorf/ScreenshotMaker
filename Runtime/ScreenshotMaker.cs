@@ -93,14 +93,20 @@ namespace Volorf.ScreenshotMaker
     
         private async Task CamCaptureAsync(string filePath)
         {
+            string finalName;
+            
             if (useNameCounter)
             {
                 _currentCounter++;
                 PlayerPrefs.SetInt(COUNTER_NAME, _currentCounter);
-                defaultCoverName += _currentCounter;
+                 finalName = defaultCoverName + _currentCounter;
+            }
+            else
+            {
+                finalName = defaultCoverName;
             }
             
-            await File.WriteAllBytesAsync(filePath + "/" + defaultCoverName + ".png", GetImageDataFromCamera());
+            await File.WriteAllBytesAsync(filePath + "/" + finalName + ".png", GetImageDataFromCamera());
             // Debug.Log(filePath);
         }
     }
