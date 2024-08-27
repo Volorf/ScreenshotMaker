@@ -96,6 +96,7 @@ namespace Volorf.ScreenshotMaker
             if (useNameCounter)
             {
                 _currentCounter++;
+                PlayerPrefs.SetInt(COUNTER_NAME, _currentCounter);
                 defaultCoverName += _currentCounter;
             }
             
