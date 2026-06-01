@@ -6,108 +6,122 @@ using UnityEngine.Events;
 
 namespace Volorf.ScreenshotMaker
 {
-    public class ScreenshotMaker: MonoBehaviour
+    public class ScreenshotMaker : MonoBehaviour
     {
         [Header("Camera")]
-        [SerializeField] Camera coverShotCamera;
+        [SerializeField] Camera screenshotCamera;
         [SerializeField] int cameraDepth = -1000;
-        
+
         [Space(10)] [Header("Screenshot")]
-        [SerializeField] string defaultCoverName = "cover";
+        [SerializeField] string defaultScreenshotName = "screenshot";
         [SerializeField] bool useNameCounter;
-        [SerializeField] int coverAntiAliasing = 2;
-        [SerializeField] int coverWidth = 300;
-        [SerializeField] int coverHeight = 200;
-        
+        [SerializeField] int antiAliasing = 2;
+        [SerializeField] int screenshotWidth = 300;
+        [SerializeField] int screenshotHeight = 200;
+
         [Space(10)] [Header("Events")]
         [SerializeField] UnityEvent<Texture2D> _onScreenshotTaken;
         [SerializeField] UnityEvent<Sprite> _onSpriteCreated;
 
-        [Space(10)] [Header("Debugging")] 
+        [Space(10)] [Header("Debugging")]
         [SerializeField] bool _printPath;
 
-        const string COUNTER_NAME = "Counter Name";
+        const string COUNTER_KEY = "Volorf.ScreenshotMaker.Counter";
         int _currentCounter;
 
         private void Start()
         {
-            coverShotCamera.depth = cameraDepth;
+            if (screenshotCamera == null)
+            {
+                Debug.LogError("[ScreenshotMaker] No camera assigned.", this);
+                return;
+            }
+
+            screenshotCamera.depth = cameraDepth;
+
             if (useNameCounter)
-                _currentCounter = PlayerPrefs.GetInt(COUNTER_NAME);
+                _currentCounter = PlayerPrefs.GetInt(COUNTER_KEY);
         }
 
-        public string GetImagePreviewName()
-        {
-            return defaultCoverName;
-        }
-    
         [ContextMenu("Make Screenshot")]
         public void MakeScreenshot()
         {
+            if (screenshotCamera == null)
+            {
+                Debug.LogError("[ScreenshotMaker] No camera assigned.", this);
+                return;
+            }
+
             string path = Path.Combine(Application.persistentDataPath, "Screenshots");
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
-            MakeCover(path);
-            
+
+            _ = CaptureAndSaveAsync(path);
+
             if (_printPath)
-                Debug.Log("Screenshot has been save there: " + path);
-            
+                Debug.Log("[ScreenshotMaker] Screenshot saved to: " + path);
         }
 
-        public async void MakeCover(string filePath)
+        public async Task CaptureAndSaveAsync(string folderPath)
         {
             try
             {
-                await CamCaptureAsync(filePath);
+                await SaveScreenshotAsync(folderPath);
             }
             catch (Exception e)
             {
-                Debug.LogError(e);
+                Debug.LogError("[ScreenshotMaker] Failed to save screenshot: " + e);
             }
         }
 
-        public byte[] GetImageDataFromCamera()
+        public (byte[] pngData, Texture2D texture, Sprite sprite) CaptureScreenshot()
         {
-            RenderTexture tempRenderTexture = new RenderTexture(coverWidth, coverHeight, 24, RenderTextureFormat.ARGB32)
+            RenderTexture rt = new RenderTexture(screenshotWidth, screenshotHeight, 24, RenderTextureFormat.ARGB32)
             {
-                antiAliasing = coverAntiAliasing
+                antiAliasing = antiAliasing
             };
-        
-            coverShotCamera.targetTexture = tempRenderTexture;
-            coverShotCamera.Render();
-            RenderTexture.active = tempRenderTexture;
-            Texture2D tempTexture = new Texture2D(coverWidth, coverHeight);
-            tempTexture.ReadPixels(new Rect(0, 0, coverWidth, coverHeight), 0, 0);
-            tempTexture.Apply();
-            Sprite sprite = Sprite.Create(tempTexture, new Rect(0f, 0f, coverWidth, coverHeight), Vector2.zero);
+
+            RenderTexture previousTarget = screenshotCamera.targetTexture;
+
+            screenshotCamera.targetTexture = rt;
+            screenshotCamera.Render();
+
+            RenderTexture.active = rt;
+            Texture2D texture = new Texture2D(screenshotWidth, screenshotHeight);
+            texture.ReadPixels(new Rect(0, 0, screenshotWidth, screenshotHeight), 0, 0);
+            texture.Apply();
             RenderTexture.active = null;
-            byte[] imageDataFromCamera = tempTexture.EncodeToPNG();
-        
-            _onScreenshotTaken?.Invoke(tempTexture);
-            _onSpriteCreated.Invoke(sprite);
-            
-            Destroy(tempTexture);
-            
-            return imageDataFromCamera;
+
+            screenshotCamera.targetTexture = previousTarget;
+            rt.Release();
+            Destroy(rt);
+
+            byte[] pngData = texture.EncodeToPNG();
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, screenshotWidth, screenshotHeight), Vector2.zero);
+
+            _onScreenshotTaken?.Invoke(texture);
+            _onSpriteCreated?.Invoke(sprite);
+
+            return (pngData, texture, sprite);
         }
-    
-        private async Task CamCaptureAsync(string filePath)
+
+        private async Task SaveScreenshotAsync(string folderPath)
         {
             string finalName;
-            
+
             if (useNameCounter)
             {
                 _currentCounter++;
-                PlayerPrefs.SetInt(COUNTER_NAME, _currentCounter);
-                 finalName = defaultCoverName + _currentCounter;
+                PlayerPrefs.SetInt(COUNTER_KEY, _currentCounter);
+                finalName = defaultScreenshotName + _currentCounter;
             }
             else
             {
-                finalName = defaultCoverName;
+                finalName = defaultScreenshotName;
             }
-            
-            await File.WriteAllBytesAsync(filePath + "/" + finalName + ".png", GetImageDataFromCamera());
-            // Debug.Log(filePath);
+
+            var (pngData, _, _) = CaptureScreenshot();
+            await File.WriteAllBytesAsync(Path.Combine(folderPath, finalName + ".png"), pngData);
         }
     }
 }
