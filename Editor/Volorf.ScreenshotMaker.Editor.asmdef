@@ -1,0 +1,9 @@
+{
+    "name": "Volorf.ScreenshotMaker.Editor",
+    "references": [
+        "Volorf.ScreenshotMaker"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}
