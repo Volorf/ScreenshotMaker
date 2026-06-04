@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Volorf.ScreenshotMaker
 {
@@ -18,10 +17,6 @@ namespace Volorf.ScreenshotMaker
         [SerializeField] int antiAliasing = 2;
         [SerializeField] int screenshotWidth = 300;
         [SerializeField] int screenshotHeight = 200;
-
-        [Space(10)] [Header("Events")]
-        [SerializeField] UnityEvent<Texture2D> _onScreenshotTaken;
-        [SerializeField] UnityEvent<Sprite> _onSpriteCreated;
 
         [Space(10)] [Header("Debugging")]
         [SerializeField] bool _printPath;
@@ -73,8 +68,27 @@ namespace Volorf.ScreenshotMaker
                 Debug.LogError("[ScreenshotMaker] Failed to save screenshot: " + e);
             }
         }
+        
+        public async Task MakeCover(string filePath)
+        {
+            if (screenshotCamera == null)
+            {
+                Debug.LogError("[ScreenshotMaker] No camera assigned.", this);
+                return;
+            }
 
-        public (byte[] pngData, Texture2D texture, Sprite sprite) CaptureScreenshot()
+            try
+            {
+                byte[] pngData = CaptureScreenshot();
+                await File.WriteAllBytesAsync(filePath + ".png", pngData);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+
+        public byte[] CaptureScreenshot()
         {
             RenderTexture rt = new RenderTexture(screenshotWidth, screenshotHeight, 24, RenderTextureFormat.ARGB32)
             {
@@ -97,12 +111,9 @@ namespace Volorf.ScreenshotMaker
             Destroy(rt);
 
             byte[] pngData = texture.EncodeToPNG();
-            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, screenshotWidth, screenshotHeight), Vector2.zero);
+            Destroy(texture);
 
-            _onScreenshotTaken?.Invoke(texture);
-            _onSpriteCreated?.Invoke(sprite);
-
-            return (pngData, texture, sprite);
+            return pngData;
         }
 
         private async Task SaveScreenshotAsync(string folderPath)
@@ -120,7 +131,7 @@ namespace Volorf.ScreenshotMaker
                 finalName = defaultScreenshotName;
             }
 
-            var (pngData, _, _) = CaptureScreenshot();
+            byte[] pngData = CaptureScreenshot();
             await File.WriteAllBytesAsync(Path.Combine(folderPath, finalName + ".png"), pngData);
         }
     }
